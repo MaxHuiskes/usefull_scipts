@@ -1,33 +1,43 @@
 import os
-import shutil
+import zipfile
 
-def zip_and_split(folder_path, output_base_name, chunk_size_gb=4):
-    # Convert GB to Bytes
-    chunk_size = chunk_size_gb * 1024 * 1024 * 1024
-    zip_file_name = f"{output_base_name}.zip"
+def zip_in_chunks(folder_path, output_prefix, max_size_gb=4):
+    folder_path = os.path.abspath(os.path.expanduser(folder_path))
+    max_size = int(max_size_gb * 1024 * 1024 * 1024)
+    
+    archive_num = 1
+    current_zip_name = f"{output_prefix}_{archive_num}.zip"
+    zf = zipfile.ZipFile(current_zip_name, "w", zipfile.ZIP_DEFLATED)
+    
+    current_size = 0
+    print(f"--- Creating {current_zip_name} ---")
 
-    print(f"--- Archiving folder: {folder_path} ---")
-    # Create the initial large zip file
-    shutil.make_archive(output_base_name, 'zip', folder_path)
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            file_path = os.path.join(root, file)
+            file_size = os.path.getsize(file_path)
 
-    print(f"--- Splitting into {chunk_size_gb}GB chunks ---")
-    part_num = 1
-    with open(zip_file_name, 'rb') as f:
-        while True:
-            chunk = f.read(chunk_size)
-            if not chunk:
-                break
-            
-            part_name = f"{zip_file_name}.part{part_num}"
-            with open(part_name, 'wb') as chunk_file:
-                chunk_file.write(chunk)
-            
-            print(f"Created: {part_name}")
-            part_num += 1
+            # If adding this file exceeds the limit, start a new zip
+            if current_size + file_size > max_size:
+                zf.close()
+                print(f"Finished {current_zip_name} (Size: {current_size / (1024**3):.2f} GB)")
+                
+                archive_num += 1
+                current_zip_name = f"{output_prefix}_{archive_num}.zip"
+                zf = zipfile.ZipFile(current_zip_name, "w", zipfile.ZIP_DEFLATED)
+                current_size = 0
+                print(f"--- Creating {current_zip_name} ---")
 
-    # Clean up the original large zip file
-    os.remove(zip_file_name)
-    print("--- Process Complete ---")
+            # Add file to the current zip
+            # arcname ensures we don't store the entire absolute path inside the zip
+            arcname = os.path.relpath(file_path, folder_path)
+            zf.write(file_path, arcname)
+            current_size += file_size
+
+    zf.close()
+    print(f"Finished {current_zip_name} (Size: {current_size / (1024**3):.2f} GB)")
+    print("--- All files archived into independent volumes! ---")
 
 # Usage
-zip_and_split('your_folder_here', 'my_archive', chunk_size_gb=4)
+# Note: folder_path should be the UNZIPPED folder of your courses.
+zip_in_chunks('/path/to/folder', 'name file', max_size_gb=3)
