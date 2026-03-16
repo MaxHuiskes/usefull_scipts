@@ -1,6 +1,6 @@
-# Useful Python Scripts
+# Useful Scripts
 
-Welcome to my personal collection of Python scripts! This repository acts as a library for tools and utilities that I use frequently. 
+Welcome to my personal collection of scripts! This repository acts as a library for tools and utilities that I use frequently. 
 
 As I write more scripts, I will add them here to build up a reusable codebase.
 
@@ -26,11 +26,11 @@ A script that converts PNG images into SVG vectors while preserving multiple col
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/MaxHuiskes/usefull_python_scipts.git](https://github.com/MaxHuiskes/usefull_python_scipts.git)
+    git clone [https://github.com/MaxHuiskes/usefull_scipts.git](https://github.com/MaxHuiskes/usefull_scipts.git)
     ```
 2.  **Navigate to the category folder:**
     ```bash
-    cd usefull_python_scipts/Image_Processing
+    cd usefull_scipts/Image_Processing
     ```
 3.  **Run the script:**
     ```bash
