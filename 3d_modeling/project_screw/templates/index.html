@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Fastener Factory</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        h1 { color: #1a73e8; text-align: center; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+        h3 { font-size: 0.85rem; color: #5f6368; text-transform: uppercase; margin-top: 20px; border-left: 4px solid #1a73e8; padding-left: 10px; }
+        label { display: block; margin-top: 12px; font-weight: 600; color: #3c4043; font-size: 0.85rem; }
+        select, input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #dadce0; border-radius: 6px; box-sizing: border-box; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn { width: 100%; padding: 15px; margin-top: 30px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        .btn:hover { background: #1557b0; }
+        .highlight { background: #e8f0fe; padding: 10px; border-radius: 6px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔩 Fastener Factory</h1>
+        <form action="/generate" method="post">
+            <h3>General</h3>
+            <div class="grid">
+                <div>
+                    <label>Part Type</label>
+                    <select name="display">
+                        <option value="screw">Screw</option>
+                        <option value="nut">Nut</option>
+                        <option value="washer">Washer</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Size (Spec)</label>
+                    <select name="spec">
+                        <optgroup label="Metric">
+                            <option value="M2">M2</option><option value="M3">M3</option>
+                            <option value="M4">M4</option><option value="M5" selected>M5</option>
+                            <option value="M6">M6</option><option value="M8">M8</option>
+                            <option value="M10">M10</option><option value="M12">M12</option>
+                            <option value="M20">M20</option>
+                        </optgroup>
+                        <optgroup label="Imperial">
+                            <option value="#4">#4</option><option value="#8">#8</option>
+                            <option value="1/4">1/4"</option><option value="1/2">1/2"</option>
+                            <option value="3/4">3/4"</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div>
+                    <label>Thread Pitch</label>
+                    <select name="thread">
+                        <option value="coarse">Coarse</option>
+                        <option value="fine">Fine</option>
+                        <option value="none">None</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Washer Variant</label>
+                    <select name="washer_size">
+                        <option value="regular">Regular</option>
+                        <option value="large">Large (ISO 7093)</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3>Screw & 3D Print Strength</h3>
+            <div class="grid">
+                <div>
+                    <label>Length (mm)</label>
+                    <input type="number" name="length" value="16">
+                </div>
+                <div>
+                    <label>Head Style</label>
+                    <select name="head">
+                        <option value="hex">Hex Bolt</option>
+                        <option value="socket">Socket Head</option>
+                        <option value="flat">Flat</option>
+                        <option value="button">Button</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <label>Split Screw for Strength?</label>
+                <select name="screw_split">
+                    <option value="false">No (Vertical)</option>
+                    <option value="true">Yes (Lying Down - Stronger)</option>
+                </select>
+            </div>
+
+            <div class="grid">
+                <div>
+                    <label>Undersize (mm)</label>
+                    <input type="number" name="screw_undersize" value="0.0" step="0.05">
+                </div>
+                <div>
+                    <label>Drive Type</label>
+                    <select name="drive">
+                        <option value="none">None</option>
+                        <option value="hex">Internal Hex</option>
+                        <option value="phillips">Phillips</option>
+                        <option value="torx">Torx</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3>Nut Fit</h3>
+            <div class="grid">
+                <div>
+                    <label>Thickness</label>
+                    <select name="nut_thickness">
+                        <option value="normal">Regular</option>
+                        <option value="thin">Jam Nut</option>
+                        <option value="thick">Thick</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Clearance (mm)</label>
+                    <input type="number" name="nut_clearance" value="0.1" step="0.01">
+                </div>
+            </div>
+
+            <h3>Nut Advanced Settings</h3>
+            <div class="grid">
+                <div>
+                    <label>Thickness Type</label>
+                    <select name="nut_thickness">
+                        <option value="normal">Regular (Standard)</option>
+                        <option value="thin">Thin (Jam Nut)</option>
+                        <option value="thick">Thick Nut</option>
+                        <option value="din">DIN / ISO Standard</option>
+                        <option value="custom">-- Custom Height --</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Custom Height (mm)</label>
+                    <input type="number" name="nut_custom_thickness" value="5" step="0.1" min="1">
+                </div>
+            </div>
+            <div class="grid">
+                <div>
+                    <label>Nut Shape</label>
+                    <select name="nut_shape">
+                        <option value="hex">Hexagonal</option>
+                        <option value="square">Square</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Nut Bevel (Edges)</label>
+                    <select name="nut_bevel">
+                        <option value="auto">Auto</option>
+                        <option value="both">Top & Bottom</option>
+                        <option value="none">Flat (No Bevel)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div>
+                    <label>Print-Bed Flush</label>
+                    <select name="nut_flush">
+                        <option value="false">Standard</option>
+                        <option value="true">Flat Bottom (Better Adhesion)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Custom Width (mm)</label>
+                    <input type="number" name="nut_width" value="0" step="0.5" title="0 = Use standard width for size">
+                </div>
+            </div>
+
+            <h3>Render Quality</h3>
+            <select name="resolution">
+                <option value="2">Medium (Fast)</option>
+                <option value="3" selected>High (Recommended)</option>
+                <option value="4">Ultra (Slow)</option>
+            </select>
+
+            <button type="submit" class="btn">Download STL</button>
+        </form>
+    </div>
+</body>
+</html>
