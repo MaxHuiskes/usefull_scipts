@@ -141,18 +141,32 @@ module generate_screw() {
 
 module generate_nut() {
     thick = Nut_Thickness == "custom" ? Nut_Custom_Thickness : Nut_Thickness;
-    nut(Spec,
-        shape = Nut_Shape,
-        thickness = thick,
-        nutwidth = Nut_Width > 0 ? Nut_Width : undef,
-        thread = Thread_Mapped,
-        flanged = (Nut_Style == "flanged"),
-        bevel = Nut_Outer_Bevel,
-        bevel1 = Nut_Flush ? false : undef,
-        ibevel = Nut_Inner_Bevel,
-        anchor = BOTTOM,
-        $slop = Nut_Clearance
-    );
+    // BOSL2 nut() has no flanged parameter; flanged nuts add a washer-like collar below the hex (approx. DIN 6923).
+    union() {
+        nut(Spec,
+            shape = Nut_Shape,
+            thickness = thick,
+            nutwidth = Nut_Width > 0 ? Nut_Width : undef,
+            thread = Thread_Mapped,
+            bevel = Nut_Outer_Bevel,
+            bevel1 = Nut_Flush ? false : undef,
+            ibevel = Nut_Inner_Bevel,
+            anchor = BOTTOM,
+            $slop = Nut_Clearance
+        );
+        if (Nut_Style == "flanged") {
+            nw = struct_val(Nut_Info, "width");
+            h_nut = struct_val(Nut_Info, "thickness", 5);
+            vertex_d = is_num(nw) ? nw / cos(30) : 10;
+            flange_d = vertex_d * 1.18;
+            flange_h = max(0.6, min(2.8, is_num(h_nut) ? h_nut * 0.2 : 1.2));
+            flange_id = is_undef(W_Data)
+                ? struct_val(Nut_Info, "diameter") + 0.5
+                : Washer_Inner_Diameter;
+            down(flange_h)
+                tube(id = flange_id, od = flange_d, h = flange_h, anchor = BOTTOM);
+        }
+    }
 }
 
 module generate_washer() {
