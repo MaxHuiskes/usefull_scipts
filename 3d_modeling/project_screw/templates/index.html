@@ -14,6 +14,12 @@
         .btn { width: 100%; padding: 15px; margin-top: 30px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; }
         .btn:hover { background: #1557b0; }
         .highlight { background: #e8f0fe; padding: 10px; border-radius: 6px; margin-top: 10px; }
+        details.fold { border: 1px solid #dadce0; border-radius: 8px; margin-top: 12px; background: #fafafa; }
+        details.fold > summary { cursor: pointer; font-weight: 600; color: #1a73e8; padding: 12px 14px; list-style: none; user-select: none; }
+        details.fold > summary::-webkit-details-marker { display: none; }
+        details.fold[open] > summary { border-bottom: 1px solid #e8eaed; }
+        details.fold .fold-body { padding: 4px 14px 14px; }
+        .help { font-size: 0.72rem; color: #5f6368; margin: 4px 0 0 0; line-height: 1.35; }
     </style>
 </head>
 <body>
@@ -23,164 +29,319 @@
             <h3>General</h3>
             <div class="grid">
                 <div>
-                    <label>Part Type</label>
-                    <select name="display">
+                    <label for="f_display">Part type</label>
+                    <select id="f_display" name="display"
+                        title="Screw, nut, or washer STL. All lays out all three side by side.">
                         <option value="screw">Screw</option>
                         <option value="nut">Nut</option>
                         <option value="washer">Washer</option>
+                        <option value="all">All (layout)</option>
                     </select>
+                    <p class="help">Which single part to export, or <strong>All</strong> for screw+nut+washer in one row.</p>
                 </div>
                 <div>
-                    <label>Size (Spec)</label>
-                    <select name="spec">
+                    <label for="f_spec">Size (Spec)</label>
+                    <select id="f_spec" name="spec"
+                        title="Metric (M…) or inch (UTS). Sets thread, nut, and washer tables in OpenSCAD.">
                         <optgroup label="Metric">
-                            <option value="M2">M2</option><option value="M3">M3</option>
-                            <option value="M4">M4</option><option value="M5" selected>M5</option>
-                            <option value="M6">M6</option><option value="M8">M8</option>
-                            <option value="M10">M10</option><option value="M12">M12</option>
+                            <option value="M2">M2</option>
+                            <option value="M2.5">M2.5</option>
+                            <option value="M3">M3</option>
+                            <option value="M4">M4</option>
+                            <option value="M5" selected>M5</option>
+                            <option value="M6">M6</option>
+                            <option value="M7">M7</option>
+                            <option value="M8">M8</option>
+                            <option value="M10">M10</option>
+                            <option value="M12">M12</option>
+                            <option value="M14">M14</option>
+                            <option value="M16">M16</option>
+                            <option value="M18">M18</option>
                             <option value="M20">M20</option>
                         </optgroup>
-                        <optgroup label="Imperial">
-                            <option value="#4">#4</option><option value="#8">#8</option>
-                            <option value="1/4">1/4"</option><option value="1/2">1/2"</option>
+                        <optgroup label="Imperial (UTS)">
+                            <option value="#4">#4</option>
+                            <option value="#6">#6</option>
+                            <option value="#8">#8</option>
+                            <option value="#10">#10</option>
+                            <option value="#12">#12</option>
+                            <option value="1/4">1/4"</option>
+                            <option value="5/16">5/16"</option>
+                            <option value="3/8">3/8"</option>
+                            <option value="7/16">7/16"</option>
+                            <option value="1/2">1/2"</option>
+                            <option value="9/16">9/16"</option>
                             <option value="3/4">3/4"</option>
                         </optgroup>
                     </select>
+                    <p class="help">Fastener designation; drives thread dimensions and washer inner/outer defaults.</p>
                 </div>
             </div>
 
             <div class="grid">
                 <div>
-                    <label>Thread Pitch</label>
-                    <select name="thread">
+                    <label for="f_thread">Thread</label>
+                    <select id="f_thread" name="thread"
+                        title="Coarse/fine from standards. Custom uses Pitch (mm). None = no thread.">
                         <option value="coarse">Coarse</option>
                         <option value="fine">Fine</option>
+                        <option value="custom">Custom (use pitch)</option>
                         <option value="none">None</option>
                     </select>
+                    <p class="help">Standard coarse/fine, <strong>Custom</strong> with pitch below, or <strong>None</strong> for smooth bore/stud.</p>
                 </div>
                 <div>
-                    <label>Washer Variant</label>
-                    <select name="washer_size">
-                        <option value="regular">Regular</option>
-                        <option value="large">Large (ISO 7093)</option>
-                    </select>
+                    <label for="f_pitch">Pitch (custom thread, mm)</label>
+                    <input id="f_pitch" type="number" name="pitch" value="1" min="0.1" step="0.05"
+                        title="Distance between threads (mm). Only used when Thread = Custom.">
+                    <p class="help">Thread pitch in mm when <strong>Thread</strong> is <strong>Custom</strong>; ignored otherwise.</p>
                 </div>
             </div>
 
-            <h3>Screw & 3D Print Strength</h3>
-            <div class="grid">
-                <div>
-                    <label>Length (mm)</label>
-                    <input type="number" name="length" value="16">
+            <details class="fold" open>
+                <summary>Screw &amp; print strength</summary>
+                <div class="fold-body">
+                    <div class="grid">
+                        <div>
+                            <label for="f_length">Length (mm)</label>
+                            <input id="f_length" type="number" name="length" value="16" min="1" step="0.5"
+                                title="Overall screw length including head (shaft as modeled in BOSL2).">
+                            <p class="help">Total screw length; affects shaft and thread region in the model.</p>
+                        </div>
+                        <div>
+                            <label for="f_head">Head</label>
+                            <select id="f_head" name="head"
+                                title="Head shape. None = threaded rod with no separate head.">
+                                <option value="hex">Hex</option>
+                                <option value="none">None (threaded rod)</option>
+                                <option value="flat">Flat</option>
+                                <option value="button">Button</option>
+                                <option value="socket">Socket</option>
+                                <option value="ribbedsocket">Ribbed socket</option>
+                                <option value="pan">Pan</option>
+                                <option value="cheese">Cheese</option>
+                            </select>
+                            <p class="help">Head style; <strong>None</strong> is a stud. Drive only applies where the head supports it.</p>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="f_drive">Drive</label>
+                            <select id="f_drive" name="drive"
+                                title="Recess in the head: hex, slot, Phillips sizes, Torx sizes.">
+                                <option value="none">None</option>
+                                <option value="hex">Hex</option>
+                                <option value="slot">Slot</option>
+                                <option value="phillips">Phillips</option>
+                                <option value="ph1">Phillips PH1</option>
+                                <option value="ph2">Phillips PH2</option>
+                                <option value="ph3">Phillips PH3</option>
+                                <option value="ph4">Phillips PH4</option>
+                                <option value="torx">Torx</option>
+                                <option value="t10">Torx T10</option>
+                                <option value="t15">Torx T15</option>
+                                <option value="t20">Torx T20</option>
+                                <option value="t25">Torx T25</option>
+                            </select>
+                            <p class="help">Tool recess in the head; pick a size that matches your screw spec.</p>
+                        </div>
+                        <div>
+                            <label for="f_screw_thread_length">Thread length (mm)</label>
+                            <input id="f_screw_thread_length" type="number" name="screw_thread_length" value="0" min="0" step="0.5"
+                                title="0 = fully threaded along usable shaft; positive = limit threaded length (mm).">
+                            <p class="help"><strong>0</strong> = auto/full thread along shaft; set a value for partial threading.</p>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="f_screw_undersize">Undersize (mm)</label>
+                            <input id="f_screw_undersize" type="number" name="screw_undersize" value="0" step="0.05"
+                                title="Shrinks printed diameter slightly for clearance and fit.">
+                            <p class="help">Reduces printed OD slightly for easier fit in tapped/printed holes.</p>
+                        </div>
+                        <div>
+                            <label for="f_screw_reorient">Head down (reorient)</label>
+                            <select id="f_screw_reorient" name="screw_reorient"
+                                title="Yes: head toward the bed (often better for printing). No: opposite orientation.">
+                                <option value="true" selected>Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                            <p class="help">Orient so the head sits on the build plate (recommended for most FDM prints).</p>
+                        </div>
+                    </div>
+                    <div class="highlight">
+                        <label for="f_screw_split">Split for print strength</label>
+                        <select id="f_screw_split" name="screw_split"
+                            title="Splits the screw for layer-friendly printing; adds a tiny bridge piece.">
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                        <p class="help"><strong>Yes</strong> prints the screw in two half-shells lying down—often stronger layers along the shaft.</p>
+                    </div>
                 </div>
-                <div>
-                    <label>Head Style</label>
-                    <select name="head">
-                        <option value="hex">Hex Bolt</option>
-                        <option value="socket">Socket Head</option>
-                        <option value="flat">Flat</option>
-                        <option value="button">Button</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="highlight">
-                <label>Split Screw for Strength?</label>
-                <select name="screw_split">
-                    <option value="false">No (Vertical)</option>
-                    <option value="true">Yes (Lying Down - Stronger)</option>
-                </select>
-            </div>
+            </details>
 
-            <div class="grid">
-                <div>
-                    <label>Undersize (mm)</label>
-                    <input type="number" name="screw_undersize" value="0.0" step="0.05">
+            <details class="fold">
+                <summary>Nut settings</summary>
+                <div class="fold-body">
+                    <div class="grid">
+                        <div>
+                            <label for="f_nut_style">Nut style</label>
+                            <select id="f_nut_style" name="nut_style"
+                                title="Standard hex nut or flanged (wider collar); flanged is hex-based in BOSL2.">
+                                <option value="standard">Standard</option>
+                                <option value="flanged">Flanged</option>
+                            </select>
+                            <p class="help">Standard nut vs. flanged collar (hex geometry).</p>
+                        </div>
+                        <div>
+                            <label for="f_nut_thickness">Thickness type</label>
+                            <select id="f_nut_thickness" name="nut_thickness"
+                                title="Preset heights (thin/normal/thick/DIN) or Custom with value below.">
+                                <option value="normal">Regular</option>
+                                <option value="thin">Thin</option>
+                                <option value="thick">Thick</option>
+                                <option value="din">DIN / ISO</option>
+                                <option value="custom">Custom height</option>
+                            </select>
+                            <p class="help">Nut height preset; choose <strong>Custom</strong> to use the numeric field next block.</p>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="f_nut_custom_thickness">Custom height (mm)</label>
+                            <input id="f_nut_custom_thickness" type="number" name="nut_custom_thickness" value="5" step="0.1" min="0.5"
+                                title="Nut thickness when Thickness type = Custom; otherwise stored but may not apply.">
+                            <p class="help">Used when thickness type is <strong>Custom</strong>; also passed to OpenSCAD as fallback value.</p>
+                        </div>
+                        <div>
+                            <label for="f_nut_clearance">Clearance (mm)</label>
+                            <input id="f_nut_clearance" type="number" name="nut_clearance" value="0.1" step="0.01"
+                                title="Extra slack on internal thread for 3D-printed fit ($slop in BOSL2).">
+                            <p class="help">Loosens internal thread slightly for printed threads and tolerances.</p>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="f_nut_shape">Shape</label>
+                            <select id="f_nut_shape" name="nut_shape"
+                                title="Hex or square outer profile.">
+                                <option value="hex">Hex</option>
+                                <option value="square">Square</option>
+                            </select>
+                            <p class="help">Outer profile of the nut body.</p>
+                        </div>
+                        <div>
+                            <label for="f_nut_bevel">Bevel</label>
+                            <select id="f_nut_bevel" name="nut_bevel"
+                                title="Which edges get chamfers: auto, none, inside hole, outside corners, or both.">
+                                <option value="auto">Auto</option>
+                                <option value="none">None</option>
+                                <option value="inside">Inside</option>
+                                <option value="outside">Outside</option>
+                                <option value="both">Inside &amp; outside</option>
+                            </select>
+                            <p class="help">Chamfer on top/bottom hole edges and/or outer corners.</p>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="f_nut_flush">Flat bottom (flush)</label>
+                            <select id="f_nut_flush" name="nut_flush"
+                                title="Yes: disable bottom bevel so the nut sits flat on the bed.">
+                                <option value="false">No</option>
+                                <option value="true">Yes</option>
+                            </select>
+                            <p class="help"><strong>Yes</strong> flattens the bottom face for better bed adhesion.</p>
+                        </div>
+                        <div>
+                            <label for="f_nut_width">Width A/F (mm)</label>
+                            <input id="f_nut_width" type="number" name="nut_width" value="0" min="0" step="0.5"
+                                title="Across-flats width; 0 uses standard width for the selected Spec.">
+                            <p class="help">Across-flats size; <strong>0</strong> = default for the spec.</p>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label>Drive Type</label>
-                    <select name="drive">
-                        <option value="none">None</option>
-                        <option value="hex">Internal Hex</option>
-                        <option value="phillips">Phillips</option>
-                        <option value="torx">Torx</option>
-                    </select>
-                </div>
-            </div>
+            </details>
 
-            <h3>Nut Fit</h3>
-            <div class="grid">
-                <div>
-                    <label>Thickness</label>
-                    <select name="nut_thickness">
-                        <option value="normal">Regular</option>
-                        <option value="thin">Jam Nut</option>
-                        <option value="thick">Thick</option>
-                    </select>
+            <details class="fold">
+                <summary>Washer settings</summary>
+                <div class="fold-body">
+                    <div class="grid">
+                        <div>
+                            <label for="f_washer_size">Variant</label>
+                            <select id="f_washer_size" name="washer_size"
+                                title="Metric: regular (ISO 7089) vs large (ISO 7093). UTS uses regular dimensions only.">
+                                <option value="regular">Regular</option>
+                                <option value="large">Large (ISO 7093, metric)</option>
+                            </select>
+                            <p class="help">For metric specs, switches standard vs large washer table. Inch sizes ignore “large”.</p>
+                        </div>
+                        <div>
+                            <label for="f_washer_chamfer">Chamfer (0–1)</label>
+                            <input id="f_washer_chamfer" type="number" name="washer_chamfer" value="0" min="0" max="1" step="0.05"
+                                title="0 = sharp edges; 1 = chamfer up to half the washer thickness.">
+                            <p class="help">Scales edge chamfer relative to half the washer thickness (BOSL2 tube chamfer).</p>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="f_washer_outer_d">Outer Ø override (mm)</label>
+                            <input id="f_washer_outer_d" type="number" name="washer_outer_d" value="0" min="0" step="0.1"
+                                title="0 = use table from Spec; else force this outer diameter.">
+                            <p class="help"><strong>0</strong> = from spec table; set to override outside diameter.</p>
+                        </div>
+                        <div>
+                            <label for="f_washer_thickness">Thickness override (mm)</label>
+                            <input id="f_washer_thickness" type="number" name="washer_thickness" value="0" min="0" step="0.05"
+                                title="0 = use table from Spec; else force washer height.">
+                            <p class="help"><strong>0</strong> = from spec table; set to override washer height.</p>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label>Clearance (mm)</label>
-                    <input type="number" name="nut_clearance" value="0.1" step="0.01">
-                </div>
-            </div>
+            </details>
 
-            <h3>Nut Advanced Settings</h3>
-            <div class="grid">
-                <div>
-                    <label>Thickness Type</label>
-                    <select name="nut_thickness">
-                        <option value="normal">Regular (Standard)</option>
-                        <option value="thin">Thin (Jam Nut)</option>
-                        <option value="thick">Thick Nut</option>
-                        <option value="din">DIN / ISO Standard</option>
-                        <option value="custom">-- Custom Height --</option>
-                    </select>
+            <details class="fold">
+                <summary>Render</summary>
+                <div class="fold-body">
+                    <div class="grid">
+                        <div>
+                            <label for="f_resolution">Resolution</label>
+                            <select id="f_resolution" name="resolution"
+                                title="OpenSCAD $fa/$fs via BOSL2: lower = faster, higher = smoother curves.">
+                                <option value="1">Low</option>
+                                <option value="2">Medium</option>
+                                <option value="3" selected>High</option>
+                                <option value="4">Ultra</option>
+                            </select>
+                            <p class="help">Mesh detail (facets). Higher is slower but smoother threads and heads.</p>
+                        </div>
+                        <div>
+                            <label for="f_color">Color</label>
+                            <input id="f_color" type="color" name="color" value="#e2dede"
+                                title="OpenSCAD preview color for the solid; STL has no color.">
+                            <p class="help">Preview tint in OpenSCAD; STL downloads do not store color.</p>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="f_debug">Debug overlay</label>
+                            <select id="f_debug" name="debug"
+                                title="Adds flat text with dimensions next to the model; can confuse STL export.">
+                                <option value="false" selected>Off</option>
+                                <option value="true">On</option>
+                            </select>
+                            <p class="help"><strong>On</strong> draws reference text in the scene; leave <strong>Off</strong> for clean STL.</p>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label>Custom Height (mm)</label>
-                    <input type="number" name="nut_custom_thickness" value="5" step="0.1" min="1">
-                </div>
-            </div>
-            <div class="grid">
-                <div>
-                    <label>Nut Shape</label>
-                    <select name="nut_shape">
-                        <option value="hex">Hexagonal</option>
-                        <option value="square">Square</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Nut Bevel (Edges)</label>
-                    <select name="nut_bevel">
-                        <option value="auto">Auto</option>
-                        <option value="both">Top & Bottom</option>
-                        <option value="none">Flat (No Bevel)</option>
-                    </select>
-                </div>
-            </div>
+            </details>
 
-            <div class="grid">
-                <div>
-                    <label>Print-Bed Flush</label>
-                    <select name="nut_flush">
-                        <option value="false">Standard</option>
-                        <option value="true">Flat Bottom (Better Adhesion)</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Custom Width (mm)</label>
-                    <input type="number" name="nut_width" value="0" step="0.5" title="0 = Use standard width for size">
-                </div>
-            </div>
-
-            <h3>Render Quality</h3>
-            <select name="resolution">
-                <option value="2">Medium (Fast)</option>
-                <option value="3" selected>High (Recommended)</option>
-                <option value="4">Ultra (Slow)</option>
-            </select>
-
-            <button type="submit" class="btn">Download STL</button>
+            <button type="submit" class="btn"
+                title="Runs OpenSCAD in the server/container and downloads the generated STL.">
+                Download STL
+            </button>
+            <p class="help" style="margin-top:8px;text-align:center;">Submit runs OpenSCAD and returns one STL file. Hover any field for the same tip in a tooltip.</p>
         </form>
     </div>
 </body>
