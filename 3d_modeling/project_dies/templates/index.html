@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dice generator</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 820px; }
+        h1 { color: #1a73e8; text-align: center; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+        h3 { font-size: 0.85rem; color: #5f6368; text-transform: uppercase; margin-top: 20px; border-left: 4px solid #1a73e8; padding-left: 10px; }
+        label { display: block; margin-top: 12px; font-weight: 600; color: #3c4043; font-size: 0.85rem; }
+        select, input, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #dadce0; border-radius: 6px; box-sizing: border-box; }
+        textarea { font-family: inherit; min-height: 4.5rem; resize: vertical; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn { width: 100%; padding: 15px; margin-top: 30px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        .btn:hover { background: #1557b0; }
+        details.fold { border: 1px solid #dadce0; border-radius: 8px; margin-top: 12px; background: #fafafa; }
+        details.fold > summary {
+            cursor: pointer; font-weight: 600; color: #1a73e8; padding: 12px 14px; list-style: none; user-select: none;
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        }
+        details.fold > summary::-webkit-details-marker { display: none; }
+        details.fold > summary::after {
+            content: "+"; color: #5f6368; font-size: 1.15rem; font-weight: 700; line-height: 1; flex-shrink: 0;
+            min-width: 1.1em; text-align: center;
+        }
+        details.fold[open] > summary::after { content: "-"; }
+        details.fold[open] > summary { border-bottom: 1px solid #e8eaed; }
+        details.fold .fold-body { padding: 4px 14px 14px; }
+        .help { font-size: 0.72rem; color: #5f6368; margin: 4px 0 0 0; line-height: 1.35; }
+        .faces-scroll { max-height: min(70vh, 720px); overflow-y: auto; border: 1px solid #e8eaed; border-radius: 8px; padding: 8px 10px; margin-top: 8px; background: #fff; }
+        .face-row { border-bottom: 1px solid #f0f2f5; padding: 10px 0; }
+        .face-row:last-child { border-bottom: none; }
+        .face-head { display: grid; grid-template-columns: 64px 1fr 92px; gap: 10px; align-items: center; }
+        .face-num { font-size: 0.8rem; font-weight: 700; color: #5f6368; }
+        .face-extra { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+        @media (max-width: 700px) { .face-head { grid-template-columns: 1fr; } .face-extra { grid-template-columns: 1fr 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Tabletop dice</h1>
+        <form action="/generate" method="post">
+            <h3>Die</h3>
+            <div class="grid">
+                <div>
+                    <label for="f_die">Type</label>
+                    <select id="f_die" name="die">
+                        <optgroup label="Platonic">
+                            <option value="d20" selected>d20</option>
+                            <option value="d12">d12</option>
+                            <option value="d10">d10</option>
+                            <option value="d8">d8</option>
+                            <option value="d6">d6</option>
+                            <option value="d4">d4</option>
+                        </optgroup>
+                        <optgroup label="Large / fun (Catalan &amp; trapezohedron)">
+                            <option value="d100">d100 (100-face trapezohedron)</option>
+                            <option value="d30">d30 (rhombic triacontahedron)</option>
+                            <option value="d24">d24 (deltoidal icositetrahedron)</option>
+                            <option value="d48">d48 (disdyakis dodecahedron)</option>
+                            <option value="d12_rhombic">d12 rhombic (rhombic dodecahedron)</option>
+                        </optgroup>
+                    </select>
+                    <p class="help">d100 uses the same BOSL2 trapezohedron as d10 with 100 faces. For more than 20 custom labels use the pipe list below.</p>
+                </div>
+                <div>
+                    <label for="f_graphic_type">Graphic</label>
+                    <select id="f_graphic_type" name="graphic_type">
+                        <option value="cutout" selected>Cutout</option>
+                        <option value="debossed">Debossed</option>
+                        <option value="flush">Flush</option>
+                    </select>
+                    <p class="help">How numbers / art sit in the surface.</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div>
+                    <label for="f_diameter">Diameter (mm)</label>
+                    <input id="f_diameter" type="number" name="die_diameter" value="30" min="5" max="200" step="0.5">
+                    <p class="help">Size parameter from the OpenSCAD model.</p>
+                </div>
+                <div>
+                    <label for="f_rounding">Rounding (mm)</label>
+                    <input id="f_rounding" type="number" name="die_rounding" value="1" min="0" max="20" step="0.1">
+                    <p class="help">Edge rounding on the die body.</p>
+                </div>
+            </div>
+
+            <h3>Default text / graphics</h3>
+            <div class="grid">
+                <div>
+                    <label for="f_text_size">Text size</label>
+                    <input id="f_text_size" type="number" name="default_text_size" value="4.3" min="0.1" max="100" step="0.1">
+                    <p class="help">Number size when sides use default labels.</p>
+                </div>
+                <div>
+                    <label for="f_graphic_depth">Graphic depth (mm)</label>
+                    <input id="f_graphic_depth" type="number" name="default_graphic_depth" value="1" min="0.01" max="10" step="0.01">
+                    <p class="help">Extrusion depth for text / cutouts.</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div>
+                    <label for="f_font">Font</label>
+                    <input id="f_font" type="text" name="default_font" value="Lora">
+                    <p class="help">OpenSCAD font name (must exist where OpenSCAD runs).</p>
+                </div>
+                <div>
+                    <label for="f_font_style">Font style</label>
+                    <input id="f_font_style" type="text" name="default_font_style" value="Bold">
+                    <p class="help">e.g. Bold, Regular, or None.</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div>
+                    <label for="f_die_color">Die color</label>
+                    <input id="f_die_color" type="color" name="die_color" value="#00a0ff">
+                    <p class="help">Preview color; STL has no color.</p>
+                </div>
+                <div>
+                    <label for="f_graphic_color">Graphic color</label>
+                    <input id="f_graphic_color" type="color" name="graphic_color" value="#505050">
+                    <p class="help">Preview tint for inlays / cutouts.</p>
+                </div>
+            </div>
+
+            <h3>Face labels</h3>
+            <label for="f_pipe_labels">Pipe-separated labels (optional)</label>
+            <textarea id="f_pipe_labels" name="comma_labels" rows="2" placeholder="Shortcut: Face 1 | Face 2 | … (used if a face has no text in the grid)"></textarea>
+            <p class="help">Every row has the same fields. For <strong>d100 / d48 / d30 / d24</strong> all faces are sent as vectors to OpenSCAD. Smaller dice only use the first N rows. Pipe list still fills empty slots.</p>
+            <div class="faces-scroll">
+                {% for i in range(1, 101) %}
+                <div class="face-row" data-side="{{ i }}">
+                    <div class="face-head">
+                        <span class="face-num">Side {{ i }}</span>
+                        <input type="text" name="side{{ i }}_text" placeholder="default numbering" autocomplete="off" maxlength="64">
+                        <select name="side{{ i }}_graphic" aria-label="Side {{ i }} graphic type">
+                            <option value="text" selected>text</option>
+                            <option value="svg">svg</option>
+                        </select>
+                    </div>
+                    <div class="face-extra">
+                        <div>
+                            <label class="help" for="f_s{{ i }}_ts">Text size (blank = global default)</label>
+                            <input id="f_s{{ i }}_ts" type="text" name="side{{ i }}_text_size" placeholder="e.g. 4.5" inputmode="decimal">
+                        </div>
+                        <div>
+                            <label class="help" for="f_s{{ i }}_rot">Rotation (°)</label>
+                            <input id="f_s{{ i }}_rot" type="number" name="side{{ i }}_rotation" value="0" step="1">
+                        </div>
+                        <div>
+                            <label class="help" for="f_s{{ i }}_font">Font</label>
+                            <input id="f_s{{ i }}_font" type="text" name="side{{ i }}_font" value="default" placeholder="default">
+                        </div>
+                        <div>
+                            <label class="help" for="f_s{{ i }}_fst">Font style</label>
+                            <input id="f_s{{ i }}_fst" type="text" name="side{{ i }}_font_style" value="default" placeholder="default">
+                        </div>
+                        <div>
+                            <label class="help" for="f_s{{ i }}_svg">SVG file</label>
+                            <input id="f_s{{ i }}_svg" type="text" name="side{{ i }}_svg" value="default.svg">
+                        </div>
+                        <div>
+                            <label class="help" for="f_s{{ i }}_ss">SVG scale</label>
+                            <input id="f_s{{ i }}_ss" type="number" name="side{{ i }}_svg_scale" value="0.025" min="0.001" max="10" step="0.001">
+                        </div>
+                        <div>
+                            <label class="help" for="f_s{{ i }}_ox">Offset X</label>
+                            <input id="f_s{{ i }}_ox" type="number" name="side{{ i }}_offset_x" value="0" min="-10" max="10" step="0.01">
+                        </div>
+                        <div>
+                            <label class="help" for="f_s{{ i }}_oy">Offset Y</label>
+                            <input id="f_s{{ i }}_oy" type="number" name="side{{ i }}_offset_y" value="0" min="-10" max="10" step="0.01">
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <details class="fold" id="fold_trapezoid">
+                <summary>d10 / d100 trapezohedron</summary>
+                <div class="fold-body">
+                    <div class="grid">
+                        <div>
+                            <label for="f_d10_height">d10 height ratio</label>
+                            <select id="f_d10_height" name="d10_height_ratio">
+                                <option value="0.5" selected>0.5</option>
+                                <option value="0.66">0.66</option>
+                                <option value="0.75">0.75</option>
+                            </select>
+                            <p class="help">Trapezohedron proportions (matches SCAD comparisons).</p>
+                        </div>
+                        <div>
+                            <label for="f_balanced_d20">Numerically balanced d20</label>
+                            <select id="f_balanced_d20" name="numerically_balanced_d20">
+                                <option value="false" selected>Off</option>
+                                <option value="true">On</option>
+                            </select>
+                            <p class="help">Alternate d20 face number arrangement.</p>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="f_d10_zero">d10 zero-indexed</label>
+                            <select id="f_d10_zero" name="d10_0_indexed">
+                                <option value="true" selected>Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="f_d10_x10">d10 multiples of 10</label>
+                            <select id="f_d10_x10" name="d10_multiples_of_10">
+                                <option value="false" selected>Off</option>
+                                <option value="true">On</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <details class="fold">
+                <summary>Cutout / 6–9 / mesh</summary>
+                <div class="fold-body">
+                    <div class="grid">
+                        <div>
+                            <label for="f_cutout_scale">Cutout scale (d10)</label>
+                            <input id="f_cutout_scale" type="number" name="cutout_scale" value="0.75" min="0.1" max="2" step="0.05">
+                        </div>
+                        <div>
+                            <label for="f_cutout_size_off">Cutout size offset</label>
+                            <input id="f_cutout_size_off" type="number" name="cutout_size_offset" value="0" min="-10" max="10" step="0.1">
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="f_cutout_loc_x">Cutout location X</label>
+                            <input id="f_cutout_loc_x" type="number" name="cutout_loc_x" value="0" min="-10" max="10" step="0.01">
+                        </div>
+                        <div>
+                            <label for="f_cutout_loc_y">Cutout location Y</label>
+                            <input id="f_cutout_loc_y" type="number" name="cutout_loc_y" value="0" min="-10" max="10" step="0.01">
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="f_ind_69">Underline 6 / 9</label>
+                            <select id="f_ind_69" name="indicator_for_6_and_9">
+                                <option value="false" selected>Off</option>
+                                <option value="true">On</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="f_ind_off">6 / 9 offset</label>
+                            <input id="f_ind_off" type="number" name="offset_for_indicated_6_and_9" value="0" min="-10" max="10" step="0.1">
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="f_fn">$fn (mesh)</label>
+                            <input id="f_fn" type="number" name="fn" value="128" min="16" max="256" step="1">
+                            <p class="help">Higher = smoother, slower render.</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <button type="submit" class="btn">Download STL</button>
+            <p class="help" style="margin-top:8px;text-align:center;">Hidden face rows are not submitted; OpenSCAD keeps file defaults for unused sides.</p>
+        </form>
+    </div>
+    <script>
+    (function () {
+        var dieSides = {
+            d20: 20, d12: 12, d10: 10, d8: 8, d6: 6, d4: 4,
+            d100: 100, d30: 30, d24: 24, d48: 48, d12_rhombic: 12
+        };
+        var sel = document.getElementById("f_die");
+        var foldTrap = document.getElementById("fold_trapezoid");
+        function setDisabled(row, off) {
+            row.querySelectorAll("input, select").forEach(function (el) { el.disabled = off; });
+        }
+        function sync() {
+            var v = sel.value;
+            var n = dieSides[v] || 20;
+            document.querySelectorAll(".face-row").forEach(function (row) {
+                var s = parseInt(row.getAttribute("data-side"), 10);
+                var hide = s > n;
+                row.style.display = hide ? "none" : "";
+                setDisabled(row, hide);
+            });
+            if (foldTrap) {
+                foldTrap.style.display = (v === "d10" || v === "d100") ? "" : "none";
+            }
+        }
+        sel.addEventListener("change", sync);
+        sync();
+    })();
+    </script>
+</body>
+</html>
