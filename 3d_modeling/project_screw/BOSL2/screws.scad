@@ -2681,7 +2681,9 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
            concat([["head","none"]], drive_dim) 
      : head=="hex" ? let(
             metric_hex = [
-              // flat to flat width, height
+              // flat to flat width, height (ISO 4017 / DIN 933 style)
+              [3, [5.5, 2]],
+              [4, [7, 2.8]],
               [5, [8, 3.5]],
               [6, [10,4]],
               [8, [13, 5.3]],
